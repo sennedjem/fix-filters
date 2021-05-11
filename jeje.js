@@ -1,6 +1,4 @@
 UTMarketSearchResultsViewController.prototype._requestItems = function _requestItems(l) {
-    console.log(JSON.stringify(this._searchCriteria))
-
     this._paginationViewModel.stopAuctionUpdates();
     if(this._searchCriteria._type == "player"){
         var context = this;
@@ -24,11 +22,9 @@ UTMarketSearchResultsViewController.prototype._requestItems = function _requestI
     }
 
     function update(data,context) {
-        console.log(context._paginationViewModel)
         UTItemEntityFactory.prototype.auctionFactory = new UTAuctionEntityFactory()
         var i = context._paginationViewModel.getNumItemsPerPage()
         var o = UTItemEntityFactory.prototype.generateItemsFromAuctionData(data.auctionInfo)
-        console.log(o)
         if (0 < context._searchCriteria.offset && 0 === data.auctionInfo.length)
                 context._requestItems(l - 1);
         else {
@@ -83,24 +79,27 @@ UTMarketSearchResultsViewController.prototype._requestItems = function _requestI
         if(context._searchCriteria.minBid){
             url = url + "&micr="+ context._searchCriteria.minBid
         }
+        if(context._searchCriteria.minBid){
+            url = url + "&micr="+ context._searchCriteria.minBid
+        }
         if(context._searchCriteria.maxBid){
             url = url + "&macr="+ context._searchCriteria.maxBid
+        }
+        if(context._searchCriteria.defId.length>0){
+            url = url + "&definitionId="+ context._searchCriteria.defId[0]
         }
         return url
     }
 
     function requestItems(){
-        var url = "https://utas.external.s2.fut.ea.com/ut/game/fifa21/transfermarket?num=21&start="+(l-1)*20+"&type=player";
+        var url = `${services.Authentication.sessionUtas.url}/ut/game/fifa21/transfermarket?num=21&start=${(l-1)*20}&type=player`;
         url = addFilters(context,url)
-        console.log(url)
         fetch(url, {
             headers: {
             "X-UT-SID": services.Authentication.getUtasSession()["id"]
         }}).then(function(response) {
-            console.log('response =', response);
             return response.json();
         }).then(function(data) {
-            console.log(data)
             update(data,context)             
         }).catch(function(error){
             services.Notification.queue([services.Localization.localize("popup.error.searcherror"),enums.UINotificationType.NEGATIVE])
@@ -134,6 +133,4 @@ UTMarketSearchResultsViewController.prototype._requestItems = function _requestI
         } else
             !isPhone() && 0 < o.length && s.selectListRow(context._paginationViewModel.getCurrentItem().id)
     }
-
-
 }
