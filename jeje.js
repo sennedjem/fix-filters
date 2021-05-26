@@ -134,3 +134,53 @@ UTMarketSearchResultsViewController.prototype._requestItems = function _requestI
             !isPhone() && 0 < o.length && s.selectListRow(context._paginationViewModel.getCurrentItem().id)
     }
 }
+
+
+accessobjects.Club.getUrlParams = function(searchCriteria) {
+    var criteria = {};
+    criteria.type = searchCriteria.type === SearchType.ANY ? SearchType.PLAYER : searchCriteria.type,
+    criteria.start = searchCriteria.offset,
+    criteria.count = searchCriteria.count;
+    var formedCriteria = criteria;
+    searchCriteria.sortBy === SearchSortType.RECENCY ? formedCriteria.acquiredDate = searchCriteria.sort : (formedCriteria.sort = searchCriteria.sort,
+    formedCriteria.sort !== SearchSortOrder.NONE && (formedCriteria.sortBy = searchCriteria.sortBy));
+    if (searchCriteria.type === SearchType.VANITY)
+        formedCriteria.vanitySubTypeIds = searchCriteria.subtypes;
+    else
+        searchCriteria.category !== SearchCategory.ANY && (formedCriteria.type = searchCriteria.category.toLowerCase());
+    if (searchCriteria.rarities.length > 0)
+        formedCriteria.rarityIds = searchCriteria.rarities.join(',');
+    if (searchCriteria.level === enums.SearchLevel.SPECIAL)
+        formedCriteria.rare = searchCriteria.level;
+    else
+        searchCriteria.level !== enums.SearchLevel.ANY && (formedCriteria.level = searchCriteria.level);
+    searchCriteria.club > 0 && (formedCriteria.team = searchCriteria.club);
+    searchCriteria.league > 0 && (formedCriteria.league = searchCriteria.league);
+    searchCriteria.nation > 0 && (formedCriteria.nation = searchCriteria.nation);
+    searchCriteria.untradeables !== enums.SearchUntradeables.DEFAULT && (formedCriteria.isUntradeable = searchCriteria.untradeables);
+    searchCriteria.excludeDefIds.length > 0 && (formedCriteria.excldef = searchCriteria.excludeDefIds.join(','));
+    searchCriteria.isExactSearch && (formedCriteria.filter = "exact");
+    if (searchCriteria.zone !== -1)
+        switch (searchCriteria.zone) {
+        case ZONE_DEFENDER_VALUE:
+            formedCriteria["type"] = "playerdefender";
+            break;
+        case ZONE_MIDFIELDER_VALUE:
+            formedCriteria["type"] = "playermidfielder";
+            break;
+        case ZONE_ATTACKER_VALUE:
+            formedCriteria["type"] = "playerforward";
+            break;
+        case ZONE_NO_GK_VALUE:
+            formedCriteria["type"] = "playernonGK";
+            break;
+        default:
+            DebugUtils.Assert(![], "Unsupported zone ID in club search.");
+            break;
+        }
+    else
+        searchCriteria.position !== SearchType["ANY"] && (formedCriteria.position = searchCriteria.position);
+    return searchCriteria.playStyle > 0 && (formedCriteria.playStyle = searchCriteria.playStyle),
+    searchCriteria.hasValidDefId() && (formedCriteria.defId = searchCriteria.defId.join(',')),
+    formedCriteria;
+}
